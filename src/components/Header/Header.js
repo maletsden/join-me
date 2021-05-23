@@ -61,7 +61,7 @@ function Header({user = {}, setUser, token, removeUser, removeToken}) {
         }
     }, [token, auth, setUser]);
 
-    const [isMenuOpen, setIsMenuOpen] = React.useState(true);
+    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
     const toggleDrawer = (isOpen) => (event) => {
         if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
