@@ -9,6 +9,11 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  AZURE_WEBAPP_NAME: join-me
+  AZURE_WEBAPP_PACKAGE_PATH: '.'
+  NODE_VERSION: '14.x'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,24 +21,36 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Node.js version
+    - name: Set up Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v1
       with:
-        node-version: '14.x'
+        node-version: ${{ env.NODE_VERSION }}
 
     - name: npm install, build, and test
       run: |
         npm install
         npm run build --if-present
-        npm run test --if-present
+#        npm run test --if-present
+
+    - name: Creating artifact directories
+      run: |
+        mkdir buildartifacts
+
+    # Archive build artifact
+    - name: Archive Application
+      uses: montudor/action-zip@v0.1.0
+      with:
+        args: zip -qq -r ./buildartifacts/application.zip ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
 
     - name: Upload artifact for deployment job
+      continue-on-error: false
       uses: actions/upload-artifact@v2
       with:
-        name: node-app
-        path: .
+        name: buildartifacts
+        path: buildartifacts
 
   deploy:
+    name: Deploy to azure web app
     runs-on: ubuntu-latest
     needs: build
     environment:
@@ -43,14 +60,22 @@ jobs:
     steps:
     - name: Download artifact from build job
       uses: actions/download-artifact@v2
+      continue-on-error: false
       with:
-        name: node-app
+        name: buildartifacts
+        path: buildartifacts
+
+    # Unzipping build artifacts
+    - name: unzipping build artifact
+      uses: montudor/action-zip@v0.1.0
+      with:
+        args: unzip -qq ./buildartifacts/application.zip -d .
 
     - name: 'Deploy to Azure Web App'
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
       with:
-        app-name: 'join-me'
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
         slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_e3dbb2caff1345e6b2f42b94905dd074 }}
-        package: .
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
