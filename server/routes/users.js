@@ -1,6 +1,5 @@
 const express = require('express');
 const passport = require('passport');
-
 const User = require('../models/user.js');
 const auth = require('../config/auth.js');
 
@@ -73,7 +72,6 @@ router.post('/register', auth.optional, async (req, res) => {
         });
     }
 });
-
 
 router.get('/usersList', (req, res) => {
     User.find({}, (err, users) => res.json(users));

@@ -1,5 +1,4 @@
 const express = require('express');
-
 const Event = require('../models/event.js');
 const auth = require('../config/auth.js');
 
@@ -46,4 +45,5 @@ router.get('/getById', async (req, res) => {
         res.json([]);
     }
 });
+
 module.exports = router;
