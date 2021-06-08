@@ -74,7 +74,6 @@ router.post('/register', auth.optional, async (req, res) => {
     }
 });
 
-
 router.get('/usersList', (req, res) => {
     User.find({}, (err, users) => res.json(users));
 });
