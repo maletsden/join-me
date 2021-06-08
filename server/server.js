@@ -38,7 +38,7 @@ app.use('/events', require('./routes/events'));
 
 app.use('/static', express.static(path.join(__dirname, '../build/static')));
 
-app.get('*', function(req, res) {
+app.get('*', (req, res) => {
   res.sendFile('index.html', {root: path.join(__dirname, '../build/')});
 });
 
