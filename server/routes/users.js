@@ -1,30 +1,24 @@
 const express = require('express');
 const passport = require('passport');
 
-const { delay, ServiceBusClient } = require("@azure/service-bus"); // newly added
+const { ServiceBusClient } = require("@azure/service-bus"); // newly added
 
-const connectionString = "Endpoint=sb://klymenkodevops.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=tJXsSEvjamQPE3Q4mBNAkvkkjAf8DjcZ7Tb6U/q7sjU=";
-const queueName = "emailQueue";
-
-const serviceBusClient = new ServiceBusClient(connectionString); // newly added
-const sender = serviceBusClient.createSender(queueName); // newly added
+const serviceBusClient = new ServiceBusClient(process.env.MESSAGE_QUEUE_CONNECT_URI);
+const sender = serviceBusClient.createSender(process.env.MESSAGE_QUEUE_NAME);
 
 // sender function
-
 async function sendBatch(message) {
     let batch = await sender.createMessageBatch();
     batch.tryAddMessage(message);
     await sender.sendMessages(batch);
 }
 
-//
-
 const User = require('../models/user.js');
 const auth = require('../config/auth.js');
 
 const router = express.Router();
 
-// login handle
+// login handler
 router.post('/login', auth.optional, async (req, res, next) =>{
     const { payload } = req;
 
@@ -59,7 +53,7 @@ router.post('/login', auth.optional, async (req, res, next) =>{
     })(req, res, next);
 });
 
-//Register handle
+// register handler
 router.post('/register', auth.optional, async (req, res) => {
     const {username, email, password} = req.body;
     console.log('username: \'' + username + '\', email : \'' + email + '\', pass: \'' + password + '\'.');
@@ -82,11 +76,9 @@ router.post('/register', auth.optional, async (req, res) => {
         await newUser.save();
 
         res.json({user: newUser.toAuthJSON()});
-        // send http req to mes q
 
-       
-        sendBatch({body: {username, email}});
-    
+        // send http req to mes q
+        await sendBatch({body: {username, email}});
 
     } catch (e) {
         console.error(e.message);
