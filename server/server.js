@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const path = require('path');
 const bodyParser = require('body-parser');
 const passport = require('passport');
 const session = require("express-session");
@@ -34,5 +35,11 @@ app.get('/', (req, res) => {
 // Routes
 app.use('/users', require('./routes/users'));
 app.use('/events', require('./routes/events'));
+
+app.use('/static', express.static(path.join(__dirname, '../build/static')));
+
+app.get('*', (req, res) => {
+  res.sendFile('index.html', {root: path.join(__dirname, '../build/')});
+});
 
 app.listen(port, () => console.log(`Server started successfully on port ${port}`));
